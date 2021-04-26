@@ -2,7 +2,6 @@
 #Feb 2021
 #Name: William Robson
 
-#Telling the code to download packages if I don't have them
 wants <- c("ggfortify", "here", "nlme", "lattice","ggplot2")
 has   <- wants %in% rownames(installed.packages())
 if(any(!has)) install.packages(wants[!has])
@@ -14,13 +13,11 @@ library(here)
 library(dplyr)
 library(ggplot2)
 
-here()
-
 
 
 # load data and check the top 6 rows. 
 
-rawd<-read.csv(here("Data", "sweden_simple.csv"))
+rawd<-read.csv("sweden_simple.csv")
 head(rawd)
 nrow(rawd)
 ncol(rawd)
@@ -33,7 +30,7 @@ xlab("Time (years)")+
 ylab("Number of foxes")+ 
 labs(color='Swedish County Names')+
 geom_smooth(method =glm)+
-theme_bw() 
+theme_dark() 
 
 xyplot(red~time|name, rawd, typ=c("a","b"), xlab="Time (years)", ylab="Fox numbers")
 

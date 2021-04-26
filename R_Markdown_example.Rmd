@@ -2,29 +2,71 @@
 title: "R markdown example"
 author: "William Robson"
 date: "26/04/2021"
-output: html_document
+output:
+  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+# Viewing and summarising the data
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Below is the data summary for the 1st question of the meta-analysis assignment for BIO8075. We first need to activate the r packages, which are displayed below:
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r message=FALSE}
+library(metafor)
+library(mosaic)
 ```
 
-## Including Plots
+Loading in the data and viewing it
 
-You can also embed plots, for example:
+```{r } 
+Q1.dat <- read.csv("Q1.csv")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+summary(Q1.dat)
+```
+As can be seen the data is in a continious format. We still need the vi and yi variables (Hedge's g and within variance) to carry out further analysis. We use the escalc function of the metafor package and then assign the correct measures to the function (as seen below).
+``` {R}
+continuous <- escalc(measure="SMD", m1i=mean_control, sd1i=SD_control, n1i=sample_size_control,
+                         m2i=mean_invaded, sd2i=SD_invaded, n2i=sample_size_invaded, data=Q1.dat)
+
+summary(continuous)
+```
+Now we can finally do random meta-analysis with this data 
+
+``` {R}
+continuous_random_rma <- rma(yi, vi, data=continuous)
+
+summary(continuous_random_rma)
+```
+We get an overall effect size of 0.53 and confidence intervals ranging from 0.12 - 0.9. We also generate a p-value of 0.0106, indicating signifcant differences.
+
+## Plotting the data
+
+Now we have carried out the meta-analysis, we want to view it on a forest plot, a Q-Q plot and a funnel plot to look for publication bias
+
+## Forest plot
+
+```{r }
+forest(continuous_random_rma, showweights = TRUE, slab=continuous$lastname)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Quantile to Quantile plot
+
+``` {r}
+qqnorm(continuous_random_rma, main="Random normal QQ plot")
+```
+
+## Bias prediction
+
+```{r continuous, echo=TRUE}
+continuous_funnel <- rma(yi, vi, data=continuous)
+
+continuous_trimfill <- trimfill(continuous_funnel)
+
+funnel(continuous_trimfill, level=c(90, 95, 99),
+       shade=c("white", "gray", "darkgray"),
+       refline=0)
+```
